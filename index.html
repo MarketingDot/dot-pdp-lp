@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOT Energy — Simulação Desktop</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    background: #fff;
+    color: #1a1a2e;
+  }
+
+  /* ANNOUNCEMENT BAR */
+  .ann-bar {
+    background: #1B3A8C;
+    color: #F5C800;
+    text-align: center;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .ann-bar span { color: #fff; font-weight: 400; margin: 0 8px; }
+
+  /* NAVBAR */
+  .navbar {
+    background: #1B3A8C;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    height: 60px;
+    position: sticky;
+    top: 36px;
+    z-index: 99;
+  }
+  .navbar__logo {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+  .navbar__logo span { color: #F5C800; }
+  .navbar__nav { display: flex; gap: 32px; }
+  .navbar__nav a {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .navbar__nav a:hover { color: #F5C800; }
+  .navbar__actions { display: flex; gap: 16px; align-items: center; }
+  .navbar__actions svg { color: #fff; cursor: pointer; }
+  .cart-badge {
+    background: #F5C800;
+    color: #1B3A8C;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 50%;
+    width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: -8px; margin-top: -8px;
+  }
+
+  /* HERO SECTION */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 48px;
+    gap: 48px;
+    background: #FFFFDF;
+    min-height: calc(100vh - 96px);
+  }
+
+  /* COLUNA ESQUERDA — Galeria */
+  .gallery { position: sticky; top: 96px; align-self: start; }
+  .gallery__main {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .gallery__main img { width: 100%; height: 100%; object-fit: cover; }
+  .gallery__thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .gallery__thumb {
+    background: #fff;
+    border-radius: 8px;
+    aspect-ratio: 1;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .gallery__thumb.active { border-color: #1B3A8C; }
+  .gallery__thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* COLUNA DIREITA — Compra */
+  .purchase { display: flex; flex-direction: column; gap: 20px; }
+
+  .rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .rating__avatars { display: flex; }
+  .rating__avatars img {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid #FFFFDF;
+    margin-right: -8px;
+    object-fit: cover;
+  }
+  .rating__stars { color: #F5C800; font-size: 16px; margin-left: 16px; }
+  .rating__count { font-size: 13px; color: #666; font-weight: 600; }
+
+  .product-title {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.15;
+    color: #1a1a2e;
+  }
+  .product-title em {
+    font-style: normal;
+    color: #1B3A8C;
+    text-decoration: underline;
+    text-decoration-color: #F5C800;
+    text-underline-offset: 4px;
+  }
+
+  .product-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #444;
+  }
+
+  .claims {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .claims li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .claims li svg { color: #1B3A8C; flex-shrink: 0; }
+
+  .divider { border: none; border-top: 1px solid rgba(0,0,0,0.1); }
+
+  /* BUNDLE BUILDER */
+  .bundle-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .bundle-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .bundle-tab {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .bundle-tab.active {
+    border-color: #1B3A8C;
+    background: #f0f4ff;
+  }
+  .bundle-tab__qty {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+  .bundle-tab__sachets {
+    font-size: 11px;
+    color: #888;
+    margin: 2px 0;
+  }
+  .bundle-tab__price {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1B3A8C;
+  }
+  .bundle-tab__badge {
+    position: absolute;
+    top: -10px;
+    right: 8px;
+    background: #1B3A8C;
+    color: #F5C800;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  /* FLAVOR LIST */
+  .flavors-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .flavors-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1B3A8C;
+    float: right;
+  }
+  .flavor-list { display: flex; flex-direction: column; gap: 8px; }
+  .flavor-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1.5px solid #e8e8e8;
+    position: relative;
+  }
+  .flavor-item__img {
+    width: 48px; height: 48px;
+    border-radius: 8px;
+    object-fit: contain;
+    background: #f5f5f5;
+    padding: 4px;
+    flex-shrink: 0;
+  }
+  .flavor-item__info { flex: 1; }
+  .flavor-item__name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+  .flavor-item__badge-new {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: #F5C800;
+    color: #1B3A8C;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .flavor-item__badge-top {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: #1B3A8C;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .flavor-counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .flavor-counter__btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #888;
+    transition: all 0.15s;
+  }
+  .flavor-counter__btn.plus {
+    background: #1B3A8C;
+    border-color: #1B3A8C;
+    color: #fff;
+  }
+  .flavor-counter__btn.plus:hover { background: #162f73; }
+  .flavor-counter__val {
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* PRICE BOX */
+  .price-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1.5px solid #e8e8e8;
+  }
+  .price-box__per { font-size: 13px; color: #888; }
+  .price-box__right { display: flex; align-items: center; gap: 10px; }
+  .price-box__old {
+    font-size: 13px;
+    color: #aaa;
+    text-decoration: line-through;
+  }
+  .price-box__total {
+    font-size: 22px;
+    font-weight: 900;
+    color: #1a1a2e;
+  }
+  .price-box__off {
+    background: #c8e6b4;
+    color: #3a5a28;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+
+  /* CTA */
+  .cta-btn {
+    background: #1B3A8C;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+  }
+  .cta-btn:hover { background: #162f73; }
+
+  /* TRUST */
+  .trust {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #666;
+  }
+  .trust-item svg { color: #1B3A8C; }
+
+  /* GARANTIA */
+  .guarantee {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f0f4ff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid #d0dbf5;
+  }
+  .guarantee__icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .guarantee__text { font-size: 13px; line-height: 1.5; color: #444; }
+  .guarantee__text strong { color: #1B3A8C; }
+
+  /* ACCORDIONS */
+  .accordions { display: flex; flex-direction: column; gap: 4px; }
+  .accordion {
+    border: 1.5px solid #e8e8e8;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .accordion summary {
+    padding: 14px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+  }
+  .accordion summary::-webkit-details-marker { display: none; }
+
+  /* PAGE BG */
+  .page-bg { background: #FFFFDF; }
+</style>
+</head>
+<body class="page-bg">
+
+<!-- ANNOUNCEMENT BAR -->
+<div class="ann-bar">
+  🚀 APROVEITE FRETE GRÁTIS NAS COMPRAS ACIMA DE R$290
+  <span>·</span>
+  ⚡ ENERGIA QUE AGE NA HORA — SEM CRASH, SEM CULPA
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar__logo">D<span>⚡</span>T</div>
+  <div class="navbar__nav">
+    <a href="#">Compre aqui</a>
+    <a href="#">Conheça ▾</a>
+    <a href="#">FAQ</a>
+    <a href="#">Quer revender?</a>
+    <a href="#">Rastreie seu pedido</a>
+  </div>
+  <div class="navbar__actions">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <div style="position:relative; display:flex; align-items:center;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <div class="cart-badge">0</div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+
+  <!-- COLUNA ESQUERDA — Galeria -->
+  <div class="gallery">
+    <div class="gallery__main">
+      <img src="https://minhadot.com/cdn/shop/t/38/assets/offer-01.png?v=87867878782888568741780946014" alt="Pouch DOT Energy">
+    </div>
+    <div class="gallery__thumbs">
+      <div class="gallery__thumb active">
+        <img src="https://minhadot.com/cdn/shop/t/38/assets/offer-01.png?v=87867878782888568741780946014" alt="">
+      </div>
+      <div class="gallery__thumb">
+        <img src="https://minhadot.com/cdn/shop/t/38/assets/offer-02.png?v=49375494084497872411780946016" alt="">
+      </div>
+      <div class="gallery__thumb">
+        <img src="https://minhadot.com/cdn/shop/t/38/assets/offer-03.png?v=90119417728598840491780946015" alt="">
+      </div>
+      <div class="gallery__thumb">
+        <img src="https://minhadot.com/cdn/shop/t/38/assets/offer-04.png?v=162078468451958896011780946014" alt="">
+      </div>
+      <div class="gallery__thumb">
+        <img src="https://minhadot.com/cdn/shop/t/38/assets/offer-05.png?v=63888955830026006611780946013" alt="">
+      </div>
+      <div class="gallery__thumb">
+        <img src="https://minhadot.com/cdn/shop/t/38/assets/offer-06.png?v=64088703684542078531780946012" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- COLUNA DIREITA — Compra -->
+  <div class="purchase">
+
+    <!-- Rating -->
+    <div class="rating">
+      <div class="rating__avatars">
+        <img src="https://i.pravatar.cc/64?img=47" alt="">
+        <img src="https://i.pravatar.cc/64?img=32" alt="">
+        <img src="https://i.pravatar.cc/64?img=12" alt="">
+        <img src="https://i.pravatar.cc/64?img=68" alt="">
+        <img src="https://i.pravatar.cc/64?img=5" alt="">
+      </div>
+      <span class="rating__stars">★★★★★</span>
+      <span class="rating__count">+30.000 clientes energizados</span>
+    </div>
+
+    <!-- Título -->
+    <h1 class="product-title">
+      Dot — O primeiro <em>energético em bala</em> do Brasil
+    </h1>
+
+    <!-- Descrição -->
+    <p class="product-desc">
+      Energia que age na hora. Absorvida direto pela mucosa da boca, sem passar pelo estômago, sem peso e sem crash. Um sachê entrega o foco de uma lata de energético — em segundos.
+    </p>
+
+    <!-- Claims -->
+    <ul class="claims">
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+        Foco em até 60 segundos
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+        Zero açúcar e zero calorias
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+        Cafeína, taurina e vitaminas B6 e B12
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+        Formato de bolso, pronto pra qualquer lugar
+      </li>
+    </ul>
+
+    <hr class="divider">
+
+    <!-- Bundle Builder -->
+    <div>
+      <p class="bundle-label">Selecione a quantidade</p>
+      <div class="bundle-tabs">
+        <div class="bundle-tab">
+          <div class="bundle-tab__qty">1 Pouch</div>
+          <div class="bundle-tab__sachets">25 sachês</div>
+          <div class="bundle-tab__price">R$ 6,50 / sachê</div>
+        </div>
+        <div class="bundle-tab">
+          <div class="bundle-tab__qty">2 Pouches</div>
+          <div class="bundle-tab__sachets">50 sachês</div>
+          <div class="bundle-tab__price">R$ 6,00 / sachê</div>
+        </div>
+        <div class="bundle-tab active">
+          <div class="bundle-tab__badge">MELHOR OFERTA</div>
+          <div class="bundle-tab__qty">3 Pouches</div>
+          <div class="bundle-tab__sachets">75 sachês</div>
+          <div class="bundle-tab__price">R$ 5,00 / sachê</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flavor List -->
+    <div>
+      <p class="bundle-label">
+        Selecione os sabores
+        <span class="flavors-count">QUANTIDADE 0/3</span>
+      </p>
+      <div class="flavor-list">
+
+        <div class="flavor-item">
+          <img class="flavor-item__img" src="https://minhadot.com/cdn/shop/files/sabor-menta.png?v=1749491973&width=120" alt="Menta">
+          <div class="flavor-item__info">
+            <div class="flavor-item__name">Menta</div>
+          </div>
+          <div class="flavor-counter">
+            <button class="flavor-counter__btn">−</button>
+            <span class="flavor-counter__val">0</span>
+            <button class="flavor-counter__btn plus">+</button>
+          </div>
+        </div>
+
+        <div class="flavor-item">
+          <img class="flavor-item__img" src="https://minhadot.com/cdn/shop/files/sabor-frutas-vermelhas.png?v=1749491971&width=120" alt="Frutas Vermelhas">
+          <div class="flavor-item__info">
+            <div class="flavor-item__name">Frutas Vermelhas</div>
+          </div>
+          <div class="flavor-counter">
+            <button class="flavor-counter__btn">−</button>
+            <span class="flavor-counter__val">0</span>
+            <button class="flavor-counter__btn plus">+</button>
+          </div>
+        </div>
+
+        <div class="flavor-item">
+          <img class="flavor-item__img" src="https://minhadot.com/cdn/shop/files/sabor-citrus.png?v=1749491971&width=120" alt="Citrus">
+          <div class="flavor-item__info">
+            <div class="flavor-item__name">Citrus</div>
+          </div>
+          <div class="flavor-counter">
+            <button class="flavor-counter__btn">−</button>
+            <span class="flavor-counter__val">0</span>
+            <button class="flavor-counter__btn plus">+</button>
+          </div>
+        </div>
+
+        <div class="flavor-item">
+          <div class="flavor-item__badge-new">NOVO</div>
+          <img class="flavor-item__img" src="https://minhadot.com/cdn/shop/files/copia_de_melancia_ed29ba6b-d999-44a3-8e23-5397a5adbabf.png?v=1780971847&width=120" alt="Melancia com Limão">
+          <div class="flavor-item__info">
+            <div class="flavor-item__name">Melancia com Limão</div>
+          </div>
+          <div class="flavor-counter">
+            <button class="flavor-counter__btn">−</button>
+            <span class="flavor-counter__val">0</span>
+            <button class="flavor-counter__btn plus">+</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Price Box -->
+    <div class="price-box">
+      <div class="price-box__per">R$ 124,97 por Pouch</div>
+      <div class="price-box__right">
+        <span class="price-box__old">R$ 487,47</span>
+        <span class="price-box__total">R$ 374,90</span>
+        <span class="price-box__off">23% OFF</span>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="cta-btn">Adicionar ao Carrinho · 3x de R$ 124,97</button>
+
+    <!-- Trust -->
+    <div class="trust">
+      <div class="trust-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Pagamento 100% Seguro
+      </div>
+      <div class="trust-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        em até 3x s/juros
+      </div>
+    </div>
+
+    <!-- GARANTIA — elemento novo inspirado na Javvy -->
+    <div class="guarantee">
+      <div class="guarantee__icon">🛡️</div>
+      <div class="guarantee__text">
+        <strong>Satisfação garantida.</strong> Se você não amar a Dot, devolvemos 100% do seu dinheiro. Sem burocracia, sem perguntas.
+      </div>
+    </div>
+
+    <!-- Accordions -->
+    <div class="accordions">
+      <details class="accordion">
+        <summary>O que é Dot <span>+</span></summary>
+      </details>
+      <details class="accordion">
+        <summary>Benefícios <span>+</span></summary>
+      </details>
+      <details class="accordion">
+        <summary>Informação nutricional <span>+</span></summary>
+      </details>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  // Thumbnail click
+  document.querySelectorAll('.gallery__thumb').forEach((thumb, i) => {
+    thumb.addEventListener('click', () => {
+      document.querySelectorAll('.gallery__thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+      const src = thumb.querySelector('img').src;
+      document.querySelector('.gallery__main img').src = src;
+    });
+  });
+
+  // Bundle tabs
+  document.querySelectorAll('.bundle-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.bundle-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
