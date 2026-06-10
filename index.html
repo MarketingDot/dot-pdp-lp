@@ -429,7 +429,7 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-  <div class="navbar__logo">D<span>⚡</span>T</div>
+  <img src="dotlogo.png" alt="DOT Energy" class="navbar__logo" style="height:44px;width:auto;display:block;">
   <div class="navbar__nav">
     <a href="#">Compre aqui</a>
     <a href="#">Conheça ▾</a>
@@ -657,23 +657,127 @@
 </section>
 
 <script>
-  // Thumbnail click
-  document.querySelectorAll('.gallery__thumb').forEach((thumb, i) => {
-    thumb.addEventListener('click', () => {
-      document.querySelectorAll('.gallery__thumb').forEach(t => t.classList.remove('active'));
-      thumb.classList.add('active');
-      const src = thumb.querySelector('img').src;
-      document.querySelector('.gallery__main img').src = src;
-    });
-  });
+  // ── Data ──────────────────────────────────────────────────────────────
+  const BUNDLES = [
+    { qty: 1, sachets: 25, pricePerSachet: 6.50, perPouch: 162.50, total: 162.50, old: null,   off: null },
+    { qty: 2, sachets: 50, pricePerSachet: 6.00, perPouch: 150.00, total: 300.00, old: 325.00, off: 8    },
+    { qty: 3, sachets: 75, pricePerSachet: 5.00, perPouch: 124.97, total: 374.90, old: 487.47, off: 23   },
+  ];
 
-  // Bundle tabs
-  document.querySelectorAll('.bundle-tab').forEach(tab => {
+  let selectedBundle = 2; // 3 pouches active by default
+
+  // ── Helpers ───────────────────────────────────────────────────────────
+  const fmt = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function getTotalSelected() {
+    return [...document.querySelectorAll('.flavor-counter__val')]
+      .reduce((sum, el) => sum + parseInt(el.textContent), 0);
+  }
+
+  // ── Bundle UI update ──────────────────────────────────────────────────
+  function updateBundleUI() {
+    const b = BUNDLES[selectedBundle];
+
+    document.querySelector('.price-box__per').textContent = `R$ ${fmt(b.perPouch)} por Pouch`;
+    document.querySelector('.price-box__total').textContent = `R$ ${fmt(b.total)}`;
+
+    const oldEl = document.querySelector('.price-box__old');
+    oldEl.textContent = b.old ? `R$ ${fmt(b.old)}` : '';
+    oldEl.style.visibility = b.old ? 'visible' : 'hidden';
+
+    const offEl = document.querySelector('.price-box__off');
+    offEl.textContent = b.off ? `${b.off}% OFF` : '';
+    offEl.style.visibility = b.off ? 'visible' : 'hidden';
+
+    const installment = b.total / 3;
+    document.querySelector('.cta-btn').textContent =
+      `Adicionar ao Carrinho · 3x de R$ ${fmt(installment)}`;
+
+    // clamp selected flavors to new max
+    const max = b.qty;
+    let total = getTotalSelected();
+    if (total > max) {
+      document.querySelectorAll('.flavor-counter__val').forEach(el => {
+        if (total <= max) return;
+        const v = parseInt(el.textContent);
+        const cut = Math.min(v, total - max);
+        el.textContent = v - cut;
+        total -= cut;
+      });
+    }
+
+    updateFlavorLabel();
+    updateCounterButtons();
+  }
+
+  // ── Flavor label ──────────────────────────────────────────────────────
+  function updateFlavorLabel() {
+    const total = getTotalSelected();
+    const max = BUNDLES[selectedBundle].qty;
+    const label = document.querySelector('.flavors-count');
+    label.textContent = `QUANTIDADE ${total}/${max}`;
+    label.style.color = total === max ? '#2e7d32' : '#1B3A8C';
+  }
+
+  // ── Enable / disable counter buttons ─────────────────────────────────
+  function updateCounterButtons() {
+    const total = getTotalSelected();
+    const max = BUNDLES[selectedBundle].qty;
+    document.querySelectorAll('.flavor-item').forEach(item => {
+      const val = parseInt(item.querySelector('.flavor-counter__val').textContent);
+      const minus = item.querySelector('.flavor-counter__btn:not(.plus)');
+      const plus = item.querySelector('.flavor-counter__btn.plus');
+      minus.disabled = val === 0;
+      minus.style.opacity = val === 0 ? '0.35' : '1';
+      plus.disabled = total >= max;
+      plus.style.opacity = total >= max ? '0.35' : '1';
+      plus.style.cursor = total >= max ? 'not-allowed' : 'pointer';
+    });
+  }
+
+  // ── Bundle tabs ───────────────────────────────────────────────────────
+  document.querySelectorAll('.bundle-tab').forEach((tab, i) => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.bundle-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      selectedBundle = i;
+      updateBundleUI();
     });
   });
+
+  // ── Flavor counters ───────────────────────────────────────────────────
+  document.querySelectorAll('.flavor-item').forEach(item => {
+    const valEl = item.querySelector('.flavor-counter__val');
+    const minus = item.querySelector('.flavor-counter__btn:not(.plus)');
+    const plus  = item.querySelector('.flavor-counter__btn.plus');
+
+    plus.addEventListener('click', () => {
+      if (getTotalSelected() >= BUNDLES[selectedBundle].qty) return;
+      valEl.textContent = parseInt(valEl.textContent) + 1;
+      updateFlavorLabel();
+      updateCounterButtons();
+    });
+
+    minus.addEventListener('click', () => {
+      const v = parseInt(valEl.textContent);
+      if (v === 0) return;
+      valEl.textContent = v - 1;
+      updateFlavorLabel();
+      updateCounterButtons();
+    });
+  });
+
+  // ── Gallery thumbnails ────────────────────────────────────────────────
+  document.querySelectorAll('.gallery__thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      document.querySelectorAll('.gallery__thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+      document.querySelector('.gallery__main img').src = thumb.querySelector('img').src;
+    });
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  updateBundleUI();
 </script>
 </body>
 </html>
